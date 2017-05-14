@@ -1,0 +1,1 @@
+# Basic go patterns to utilize
