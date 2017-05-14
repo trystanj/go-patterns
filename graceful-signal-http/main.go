@@ -21,7 +21,7 @@ func spin(i int, done <-chan struct{}, wg *sync.WaitGroup) {
 		select {
 		case <-done:
 			log.Println("Exiting goroutine: ", i)
-			time.Sleep(time.Second * 1)
+			time.Sleep(time.Second * 5)
 			return
 		}
 	}
@@ -54,31 +54,29 @@ func main() {
 
 	// kick off the server in another goroutine so we can listen for signals in main
 	go func() {
-		log.Fatal(s.ListenAndServe())
+		if err := s.ListenAndServe(); err != nil {
+			log.Fatalf("Could not start server! Err: %v", err)
+		}
 	}()
 
 	log.Println("Waiting for signal...")
 
-SigListen:
-	for {
-		select {
-		case s := <-sig:
-			log.Printf("Got signal: %v", s)
-			log.Println("Closing done channel")
+	// block main until we get a signal
+	sgnl := <-sig
 
-			close(done) // signal everyone
-			wg.Wait()   // wait for them to tell us they're truly done before continuing
+	log.Printf("Got signal: %v", sgnl)
+	log.Println("Closing done channel")
 
-			log.Println("All goroutines done; exiting loop")
-			break SigListen
-		}
-	}
+	close(done) // signal everyone
+	wg.Wait()   // wait for them to tell us they're truly done before continuing
+
+	log.Println("All goroutines done; exiting loop")
 
 	// This could be in the signal case above, but clean-up is more clear here
 	log.Println("Sending shutdown (5s grace period)...")
 
 	// Note that this doesn't help with "fancy" connections like Websockets; those are up to use to close up
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	s.Shutdown(ctx)
 
 	log.Println("Server shutdown complete; terminating")
