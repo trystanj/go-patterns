@@ -78,6 +78,7 @@ func main() {
 	// This could be in the signal case above, but clean-up is more clear here
 	log.Println("Sending shutdown (5s grace period)...")
 	
+	// Note that this doesn't help with "fancy" connections like Websockets; those are up to use to close up
 	ctx, _ := context.WithTimeout(context.Background(), 5 * time.Second)
 	s.Shutdown(ctx)
 
