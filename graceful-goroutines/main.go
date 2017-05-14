@@ -2,7 +2,6 @@ package main
 
 import (
 	"time"
-	"fmt"
 	"log"
 	"sync"
 )
@@ -15,7 +14,7 @@ func spin(i int, done <- chan struct{}, wg *sync.WaitGroup) {
 	for {
 		select {
 			case <- done:
-				fmt.Println("Exiting goroutine: ", i)
+				log.Println("Exiting goroutine: ", i)
 				time.Sleep(time.Second * 1)
 				return
 		}
