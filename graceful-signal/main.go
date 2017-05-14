@@ -1,26 +1,26 @@
 package main
 
 import (
-	"time"
 	"log"
-	"sync"
 	"os"
+	"sync"
+	"time"
 
 	"os/signal"
 	"syscall"
 )
 
-func spin(i int, done <- chan struct{}, wg *sync.WaitGroup) {
+func spin(i int, done <-chan struct{}, wg *sync.WaitGroup) {
 	defer wg.Done() // tell the parent group this routine is done
 
 	log.Println("Starting goroutine: ", i)
 
 	for {
 		select {
-			case <- done:
-				log.Println("Exiting goroutine: ", i)
-				time.Sleep(time.Second * 1)
-				return
+		case <-done:
+			log.Println("Exiting goroutine: ", i)
+			time.Sleep(time.Second * 1)
+			return
 		}
 	}
 }
@@ -40,21 +40,21 @@ func main() {
 	wg := &sync.WaitGroup{}
 
 	for i := 0; i < 5; i++ {
-		wg.Add(1) // add to our counter
+		wg.Add(1)            // add to our counter
 		go spin(i, done, wg) // kick them off
 	}
 
 	log.Println("Waiting for signal...")
 	for {
 		select {
-			case s := <- sig:
-				log.Printf("Got signal: %v", s)
-				log.Println("Closing done channel")
-				close(done) // signal everyone
+		case s := <-sig:
+			log.Printf("Got signal: %v", s)
+			log.Println("Closing done channel")
+			close(done) // signal everyone
 
-				wg.Wait() // wait for them to tell us they're truly done before continuing
-				log.Println("Exiting main")
-				return
+			wg.Wait() // wait for them to tell us they're truly done before continuing
+			log.Println("Exiting main")
+			return
 		}
-	}	
+	}
 }
